@@ -1,0 +1,65 @@
+import { createContext, useEffect, useState } from "react";
+import { AppConstants } from "../util/constants";
+import { toast } from "react-toastify";
+import axios from "axios";
+
+export const AppContext = createContext();
+
+export const AppContextProvider = (props) => {
+
+    axios.defaults.withCredentials = true;
+
+    const backendUrl = AppConstants.BACKEND_URL;
+    const [isLoggedin, setIsLoggedIn] = useState(false);
+    const [userData, setUserData] = useState(null);
+
+    const getUserData = async()=>{
+        try{
+            const response =  await axios.get(backendUrl+"/profile");
+
+            if(response.status === 200){
+                setUserData(response.data);
+            }else{
+                toast.error("unable to retrieve the profile");
+            }
+        }catch(error){
+            toast.error(error.message);
+        }
+    }
+
+    const getAuthState = async ()=>{
+        try{
+            const response = await axios.get(backendUrl+"/is-authenticated");
+            if(response.status === 200 && response.data === true){
+                setIsLoggedIn(true);
+                await getUserData();
+            }else{
+                setIsLoggedIn(false);
+            }
+        }catch(error){
+            if(error.response){
+                const msg = error.response.data?.message || "Authentication check failed";
+                toast.error(msg);
+            }else{
+                toast.error(error.message);
+            }
+            setIsLoggedIn(false);
+        }
+    }
+
+    useEffect(()=>{
+        getAuthState();
+    },[]);
+
+    const contextValue = {
+        backendUrl,
+        isLoggedin, setIsLoggedIn,
+        userData, setUserData, getUserData
+    };
+
+    return (
+        <AppContext.Provider value={contextValue}>
+            {props.children}
+        </AppContext.Provider>
+    );
+};
