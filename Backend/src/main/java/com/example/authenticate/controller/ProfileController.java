@@ -18,28 +18,30 @@ import com.example.authenticate.service.ProfileService;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 @RestController
 @RequiredArgsConstructor
-public class ProfileController 
+@RequestMapping("/api/v1.0")
+@CrossOrigin(origins = {"https://authify-frontend-m3im.onrender.com", "http://localhost:5173"}, allowCredentials = "true")
+public class ProfileController
 {
-	@Autowired
-	private ProfileService profileService;
-	
-	@Autowired
-	private EmailService emailService;
-	
-	@PostMapping("/register")
-	@ResponseStatus(HttpStatus.CREATED)
-	public ProfileResponse register(@Valid @RequestBody ProfileRequest request) {
-		ProfileResponse response = profileService.createProfile(request);
-		emailService.sendWelcomeEmail(response.getEmail(), response.getName());
-		return response;
-	}
-	
-	@GetMapping("/profile")
-	public ProfileResponse getProfile(@CurrentSecurityContext(expression = "authentication?.name") String email) {
-		return profileService.getProfile(email);
-	}
-
+    @Autowired
+    private ProfileService profileService;
+    
+    @Autowired
+    private EmailService emailService;
+    
+    @PostMapping("/register")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ProfileResponse register(@Valid @RequestBody ProfileRequest request) {
+        ProfileResponse response = profileService.createProfile(request);
+        emailService.sendWelcomeEmail(response.getEmail(), response.getName());
+        return response;
+    }
+    
+    @GetMapping("/profile")
+    public ProfileResponse getProfile(@CurrentSecurityContext(expression = "authentication?.name") String email) {
+        return profileService.getProfile(email);
+    }
 }
