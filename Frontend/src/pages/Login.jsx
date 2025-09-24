@@ -4,6 +4,7 @@ import { useContext, useState } from "react";
 import axios from "axios";
 import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
+import { apiUrl } from "../util/api"; // ✅ import the helper
 
 const Login = () => {
   const [isCreateAccount, setIsCreateAccount] = useState(false);
@@ -11,18 +12,19 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { backendUrl, setIsLoggedIn, getUserData} = useContext(AppContext);
+  const { backendUrl, setIsLoggedIn, getUserData } = useContext(AppContext);
   const navigate = useNavigate();
+
+  axios.defaults.withCredentials = true; // ensure cookies are sent
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
-    axios.defaults.withCredentials = true;
     setLoading(true);
 
     try {
       if (isCreateAccount) {
-        // Register API
-        const response = await axios.post(`${backendUrl}/register`, {
+        // ✅ Register API using safe URL
+        const response = await axios.post(apiUrl(backendUrl, "/register"), {
           name,
           email,
           password,
@@ -35,18 +37,18 @@ const Login = () => {
           toast.error("Email already exists");
         }
       } else {
-        // ✅ Login API (you need to implement)
-        const response = await axios.post(`${backendUrl}/login`, {
+        // ✅ Login API using safe URL
+        const response = await axios.post(apiUrl(backendUrl, "/login"), {
           email,
           password,
         });
 
         if (response.status === 200) {
           setIsLoggedIn(true);
-          getUserData();
+          await getUserData();
           navigate("/");
           toast.success("Login successful!");
-        }else{
+        } else {
           toast.error("Email/Password incorrect");
         }
       }
