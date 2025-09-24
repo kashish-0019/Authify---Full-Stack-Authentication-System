@@ -3,36 +3,32 @@ import { AppConstants } from "../util/constants";
 import { toast } from "react-toastify";
 import axios from "axios";
 
-// Helper to safely build API URLs
-const apiUrl = (endpoint) => {
-  return `${AppConstants.BACKEND_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
-};
-
 export const AppContext = createContext();
 
 export const AppContextProvider = (props) => {
+    // Ensure cookies are sent with every request
+    axios.defaults.withCredentials = true;
 
-    axios.defaults.withCredentials = true; // send cookies with requests
-
+    const backendUrl = AppConstants.BACKEND_URL;
     const [isLoggedin, setIsLoggedIn] = useState(false);
     const [userData, setUserData] = useState(null);
 
     const getUserData = async () => {
         try {
-            const response = await axios.get(apiUrl("/profile"));
+            const response = await axios.get(`${backendUrl}/profile`);
             if (response.status === 200) {
                 setUserData(response.data);
             } else {
                 toast.error("Unable to retrieve the profile");
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || error.message);
+            toast.error(error.message);
         }
     };
 
     const getAuthState = async () => {
         try {
-            const response = await axios.get(apiUrl("/is-authenticated"));
+            const response = await axios.get(`${backendUrl}/is-authenticated`);
             if (response.status === 200 && response.data === true) {
                 setIsLoggedIn(true);
                 await getUserData();
@@ -40,7 +36,12 @@ export const AppContextProvider = (props) => {
                 setIsLoggedIn(false);
             }
         } catch (error) {
-            toast.error(error.response?.data?.message || error.message || "Authentication check failed");
+            if (error.response) {
+                const msg = error.response.data?.message || "Authentication check failed";
+                toast.error(msg);
+            } else {
+                toast.error(error.message);
+            }
             setIsLoggedIn(false);
         }
     };
@@ -50,9 +51,12 @@ export const AppContextProvider = (props) => {
     }, []);
 
     const contextValue = {
-        backendUrl: AppConstants.BACKEND_URL,
-        isLoggedin, setIsLoggedIn,
-        userData, setUserData, getUserData
+        backendUrl,
+        isLoggedin,
+        setIsLoggedIn,
+        userData,
+        setUserData,
+        getUserData,
     };
 
     return (
