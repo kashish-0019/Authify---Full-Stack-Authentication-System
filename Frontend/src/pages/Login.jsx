@@ -4,7 +4,6 @@ import { useContext, useState } from "react";
 import axios from "axios";
 import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
-import { apiUrl } from "../util/api"; // ✅ import the helper
 
 const Login = () => {
   const [isCreateAccount, setIsCreateAccount] = useState(false);
@@ -15,16 +14,14 @@ const Login = () => {
   const { backendUrl, setIsLoggedIn, getUserData } = useContext(AppContext);
   const navigate = useNavigate();
 
-  axios.defaults.withCredentials = true; // ensure cookies are sent
-
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+    axios.defaults.withCredentials = true;
     setLoading(true);
 
     try {
       if (isCreateAccount) {
-        // ✅ Register API using safe URL
-        const response = await axios.post(apiUrl(backendUrl, "/register"), {
+        const response = await axios.post(`${backendUrl}/register`, {
           name,
           email,
           password,
@@ -37,15 +34,10 @@ const Login = () => {
           toast.error("Email already exists");
         }
       } else {
-        // ✅ Login API using safe URL
-        const response = await axios.post(apiUrl(backendUrl, "/login"), {
-          email,
-          password,
-        });
-
+        const response = await axios.post(`${backendUrl}/login`, { email, password });
         if (response.status === 200) {
           setIsLoggedIn(true);
-          await getUserData();
+          getUserData();
           navigate("/");
           toast.success("Login successful!");
         } else {
@@ -62,96 +54,40 @@ const Login = () => {
   return (
     <div
       className="position-relative min-vh-100 d-flex justify-content-center align-items-center"
-      style={{
-        background: "linear-gradient(90deg, #6a5af9, #826f9c)",
-        border: "none",
-      }}
+      style={{ background: "linear-gradient(90deg, #6a5af9, #826f9c)", border: "none" }}
     >
-      {/* Logo Top Left */}
       <div
-        style={{
-          position: "absolute",
-          top: "20px",
-          left: "30px",
-          display: "flex",
-          alignItems: "center",
-        }}
+        style={{ position: "absolute", top: "20px", left: "30px", display: "flex", alignItems: "center" }}
       >
-        <Link
-          to="/"
-          style={{
-            display: "flex",
-            gap: "8px",
-            alignItems: "center",
-            fontWeight: "bold",
-            textDecoration: "none",
-          }}
-        >
+        <Link to="/" style={{ display: "flex", gap: "8px", alignItems: "center", fontWeight: "bold", textDecoration: "none" }}>
           <img src={logo_home} alt="logo" height={32} width={32} />
           <span className="fw-bold fs-4 text-light">Authify</span>
         </Link>
       </div>
 
-      {/* Login Card */}
       <div className="card p-4 shadow" style={{ maxWidth: "400px", width: "100%" }}>
-        <h2 className="text-center mb-4">
-          {isCreateAccount ? "Create Account" : "Login"}
-        </h2>
-
+        <h2 className="text-center mb-4">{isCreateAccount ? "Create Account" : "Login"}</h2>
         <form onSubmit={onSubmitHandler}>
           {isCreateAccount && (
             <div className="mb-3">
-              <label htmlFor="fullName" className="form-label">
-                Full Name:
-              </label>
-              <input
-                type="text"
-                id="fullName"
-                className="form-control"
-                placeholder="Enter full name"
-                required
-                onChange={(e) => setName(e.target.value)}
-                value={name}
-              />
+              <label htmlFor="fullName" className="form-label">Full Name:</label>
+              <input type="text" id="fullName" className="form-control" placeholder="Enter full name" required
+                     onChange={(e) => setName(e.target.value)} value={name} />
             </div>
           )}
-
           <div className="mb-3">
-            <label htmlFor="email" className="form-label">
-              Email Id:
-            </label>
-            <input
-              type="email"
-              id="email"
-              className="form-control"
-              placeholder="Enter email"
-              required
-              onChange={(e) => setEmail(e.target.value)}
-              value={email}
-            />
+            <label htmlFor="email" className="form-label">Email Id:</label>
+            <input type="email" id="email" className="form-control" placeholder="Enter email" required
+                   onChange={(e) => setEmail(e.target.value)} value={email} />
           </div>
-
           <div className="mb-3">
-            <label htmlFor="password" className="form-label">
-              Password:
-            </label>
-            <input
-              type="password"
-              id="password"
-              className="form-control"
-              placeholder="**********"
-              required
-              onChange={(e) => setPassword(e.target.value)}
-              value={password}
-            />
+            <label htmlFor="password" className="form-label">Password:</label>
+            <input type="password" id="password" className="form-control" placeholder="**********" required
+                   onChange={(e) => setPassword(e.target.value)} value={password} />
           </div>
-
           <div className="d-flex justify-content-between mb-3">
-            <Link to="/reset-password" className="text-decoration-none">
-              Forgot Password ?
-            </Link>
+            <Link to="/reset-password" className="text-decoration-none">Forgot Password ?</Link>
           </div>
-
           <button type="submit" className="btn btn-primary w-100" disabled={loading}>
             {loading ? "Loading..." : isCreateAccount ? "Sign Up" : "Login"}
           </button>
@@ -160,26 +96,12 @@ const Login = () => {
         <div className="text-center mt-3">
           <p className="mb-0">
             {isCreateAccount ? (
-              <>
-                Already have an account?&nbsp;
-                <span
-                  onClick={() => setIsCreateAccount(false)}
-                  className="text-decoration-underline"
-                  style={{ cursor: "pointer" }}
-                >
-                  Login here
-                </span>
+              <>Already have an account?&nbsp;
+                <span onClick={() => setIsCreateAccount(false)} className="text-decoration-underline" style={{ cursor: "pointer" }}>Login here</span>
               </>
             ) : (
-              <>
-                Don't have an account?&nbsp;
-                <span
-                  onClick={() => setIsCreateAccount(true)}
-                  className="text-decoration-underline"
-                  style={{ cursor: "pointer" }}
-                >
-                  Sign Up
-                </span>
+              <>Don't have an account?&nbsp;
+                <span onClick={() => setIsCreateAccount(true)} className="text-decoration-underline" style={{ cursor: "pointer" }}>Sign Up</span>
               </>
             )}
           </p>
