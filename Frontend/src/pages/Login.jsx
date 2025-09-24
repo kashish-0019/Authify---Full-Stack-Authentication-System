@@ -45,7 +45,15 @@ const Login = () => {
         }
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Something went wrong");
+      if (err.response) {
+        if (err.response.status === 401) {
+          toast.error("Invalid email or password.");
+        } else {
+          toast.error(err.response.data?.message || "Something went wrong with the server.");
+        }
+      } else {
+        toast.error("Network error. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -72,18 +80,18 @@ const Login = () => {
             <div className="mb-3">
               <label htmlFor="fullName" className="form-label">Full Name:</label>
               <input type="text" id="fullName" className="form-control" placeholder="Enter full name" required
-                     onChange={(e) => setName(e.target.value)} value={name} />
+                onChange={(e) => setName(e.target.value)} value={name} />
             </div>
           )}
           <div className="mb-3">
             <label htmlFor="email" className="form-label">Email Id:</label>
             <input type="email" id="email" className="form-control" placeholder="Enter email" required
-                   onChange={(e) => setEmail(e.target.value)} value={email} />
+                onChange={(e) => setEmail(e.target.value)} value={email} />
           </div>
           <div className="mb-3">
             <label htmlFor="password" className="form-label">Password:</label>
             <input type="password" id="password" className="form-control" placeholder="**********" required
-                   onChange={(e) => setPassword(e.target.value)} value={password} />
+                onChange={(e) => setPassword(e.target.value)} value={password} />
           </div>
           <div className="d-flex justify-content-between mb-3">
             <Link to="/reset-password" className="text-decoration-none">Forgot Password ?</Link>
