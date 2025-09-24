@@ -45,11 +45,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.cors(Customizer.withDefaults()) // Enable CORS
             .csrf(AbstractHttpConfigurer::disable) // Disable CSRF (since we are building REST APIs)
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/register", "/send-reset-otp", "/reset-password", "/logout")
-                .permitAll() // these endpoints can be accessed without authentication
-                .anyRequest().authenticated() // everything else needs authentication
-            )
+			.authorizeHttpRequests(auth -> auth
+            .requestMatchers("/login", "/register", "/send-reset-otp", "/reset-password", "/logout", "/is-authenticated")
+            .permitAll() // these endpoints can be accessed without authentication
+            .anyRequest().authenticated() // everything else needs authentication
+             )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // no sessions (stateless JWT)
             .logout(AbstractHttpConfigurer::disable) // disable default logout (we handle manually)
             .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
