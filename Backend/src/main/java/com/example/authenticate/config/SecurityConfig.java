@@ -20,77 +20,72 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import com.example.authenticate.filter.JwtRequestFilter;
 import com.example.authenticate.service.AppUserDetailsService;
 
-import lombok.RequiredArgsConstructor;
-
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-	
-	@Autowired
-	private AppUserDetailsService appUserDetailsService;
 
-	@Autowired
-	private JwtRequestFilter jwtRequestFilter;
-	
-	@Autowired
-	private CustomAuthEntryPoint customAuthEntryPoint;
-	
-    // Security filter chain
+    @Autowired
+    private AppUserDetailsService appUserDetailsService;
+
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter;
+
+    @Autowired
+    private CustomAuthEntryPoint customAuthEntryPoint;
+
+    // Main security filter chain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.cors(Customizer.withDefaults()) // Enable CORS
-            .csrf(AbstractHttpConfigurer::disable) // Disable CSRF (since we are building REST APIs)
-			.authorizeHttpRequests(auth -> auth
-            .requestMatchers("/login", "/register", "/send-reset-otp", "/reset-password", "/logout", "/is-authenticated")
-            .permitAll() // these endpoints can be accessed without authentication
-            .anyRequest().authenticated() // everything else needs authentication
-             )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // no sessions (stateless JWT)
-            .logout(AbstractHttpConfigurer::disable) // disable default logout (we handle manually)
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
+            .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for REST APIs
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/login", "/register", "/send-reset-otp",
+                                 "/reset-password", "/logout", "/is-authenticated")
+                .permitAll() // Public endpoints
+                .anyRequest().authenticated() // Everything else needs JWT
+            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless JWT
+            .logout(AbstractHttpConfigurer::disable) // Disable default logout (handled manually)
             .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-            .exceptionHandling(ex ->ex.authenticationEntryPoint(customAuthEntryPoint));
+            .exceptionHandling(ex -> ex.authenticationEntryPoint(customAuthEntryPoint));
+
         return http.build();
     }
 
-    // Password encoder (used for hashing user passwords)
+    // Password encoder (for hashing passwords)
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // CORS filter
+    // CORS configuration
     @Bean
-    public CorsFilter corsFilter() {
-        return new CorsFilter(corsConfigurationSource());
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOriginPatterns(List.of(
+            "http://localhost:5173",
+            "https://authify-frontend-m3im.onrender.com"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*")); // Allow all headers
+        config.setExposedHeaders(List.of("Authorization")); // Expose JWT if needed
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
-
-    // CORS configuration
-
-
-	private CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration config = new CorsConfiguration();
-    config.setAllowedOriginPatterns(List.of("http://localhost:5173", "https://authify-frontend-m3im.onrender.com"));
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-    config.setAllowedHeaders(List.of("*")); // allow all headers
-    config.setExposedHeaders(List.of("Authorization")); // expose JWT token if needed
-    config.setAllowCredentials(true);
-
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", config);
-    return source;
-}
-    
+    // Authentication manager for DaoAuthenticationProvider
     @Bean
     public AuthenticationManager authenticationManager() {
-    	DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
-    	authenticationProvider.setUserDetailsService(appUserDetailsService);
-    	authenticationProvider.setPasswordEncoder(passwordEncoder());
-    	return new ProviderManager(authenticationProvider);
+        DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
+        authenticationProvider.setUserDetailsService(appUserDetailsService);
+        authenticationProvider.setPasswordEncoder(passwordEncoder());
+        return new ProviderManager(authenticationProvider);
     }
 }
