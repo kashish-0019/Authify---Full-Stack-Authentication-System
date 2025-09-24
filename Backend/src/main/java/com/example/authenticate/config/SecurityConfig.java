@@ -71,17 +71,20 @@ public class SecurityConfig {
 
 
     // CORS configuration
-    private CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("http://localhost:5173", "https://authify-frontend-m3im.onrender.com"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")); // allowed HTTP methods
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // headers allowed in request
-        config.setAllowCredentials(true); // allow cookies/authorization headers
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config); // apply config to all endpoints
-        return source;
-    }
+
+	private CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOriginPatterns(List.of("http://localhost:5173", "https://authify-frontend-m3im.onrender.com"));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+    config.setAllowedHeaders(List.of("*")); // allow all headers
+    config.setExposedHeaders(List.of("Authorization")); // expose JWT token if needed
+    config.setAllowCredentials(true);
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
+}
     
     @Bean
     public AuthenticationManager authenticationManager() {
