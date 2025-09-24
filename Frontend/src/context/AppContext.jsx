@@ -36,9 +36,15 @@ export const AppContextProvider = (props) => {
                 setIsLoggedIn(false);
             }
         } catch (error) {
+            // Check for specific statuses and handle them gracefully
             if (error.response) {
-                const msg = error.response.data?.message || "Authentication check failed";
-                toast.error(msg);
+                const status = error.response.status;
+                if (status === 401 || status === 403) {
+                    // This is the expected behavior for an unauthenticated user, do not show an error toast
+                } else {
+                    const msg = error.response.data?.message || "Authentication check failed";
+                    toast.error(msg);
+                }
             } else {
                 toast.error(error.message);
             }
