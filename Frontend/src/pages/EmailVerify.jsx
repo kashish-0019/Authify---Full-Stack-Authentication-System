@@ -4,22 +4,19 @@ import { useContext, useState, useRef, useEffect } from "react";
 import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { apiUrl } from "../util/api";
 
 const EmailVerify = () => {
     const inputRef = useRef([]);
     const [loading, setLoading] = useState(false);
-    const { getUserData, backendUrl, isLoggedIn, userData } = useContext(AppContext); // ✅ fixed typo
+    const { getUserData, backendUrl, isLoggedIn, userData } = useContext(AppContext);
     const navigate = useNavigate();
 
     // Auto focus
     const handleChange = (e, i) => {
         const value = e.target.value;
-        if (value && i < 5) {
-            inputRef.current[i + 1].focus();
-        }
-        if (!value && i > 0) {
-            inputRef.current[i - 1].focus();
-        }
+        if (value && i < 5) inputRef.current[i + 1].focus();
+        if (!value && i > 0) inputRef.current[i - 1].focus();
     };
 
     // Paste handler
@@ -27,22 +24,17 @@ const EmailVerify = () => {
         e.preventDefault();
         const paste = e.clipboardData.getData("text").slice(0, 6).split("");
         paste.forEach((digit, i) => {
-            if (inputRef.current[i]) {
-                inputRef.current[i].value = digit;
-            }
+            if (inputRef.current[i]) inputRef.current[i].value = digit;
         });
-
         const next = paste.length < 6 ? paste.length : 5;
         inputRef.current[next].focus();
     };
 
     // Collect OTP
-    const getOtp = () => {
-        return inputRef.current.map((input) => input.value).join("");
-    };
+    const getOtp = () => inputRef.current.map((input) => input.value).join("");
 
     // Verify OTP
-    const handleVerify = async () => {   
+    const handleVerify = async () => {
         const otp = getOtp();
         if (otp.length !== 6) {
             toast.error("Please enter a valid 6-digit OTP");
@@ -51,9 +43,8 @@ const EmailVerify = () => {
 
         setLoading(true);
         try {
-          const response = await axios.post(`${backendUrl}/verify-otp`, { otp }, { withCredentials: true });
-
-            if (response.status === 200) {   // ✅ fixed typo
+            const response = await axios.post(apiUrl(backendUrl, "/verify-otp"), { otp }, { withCredentials: true });
+            if (response.status === 200) {
                 toast.success("OTP verified successfully!");
                 getUserData();
                 navigate("/");
@@ -67,9 +58,9 @@ const EmailVerify = () => {
         }
     };
 
-    useEffect(()=>{
-        isLoggedIn && userData && userData.isAccountVerified && navigate("/");
-    },[isLoggedIn, userData]);
+    useEffect(() => {
+        if (isLoggedIn && userData?.isAccountVerified) navigate("/");
+    }, [isLoggedIn, userData, navigate]);
 
     return (
         <div>
