@@ -37,11 +37,15 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-@RestController
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
+@RestController
+@RequestMapping("/api/v1.0")
+@CrossOrigin(origins = {"https://authify-frontend-m3im.onrender.com", "http://localhost:5173"}, allowCredentials = "true")
 public class AuthController {
 
-	@Autowired
+    @Autowired
     private AppUserDetailsService appUserDetailsService;
 
     @Autowired
@@ -64,11 +68,11 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
         try {
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                        new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
 
             final String jwtToken = jwtUtil.generateToken(
-                    appUserDetailsService.loadUserByUsername(request.getEmail())
+                        appUserDetailsService.loadUserByUsername(request.getEmail())
             );
 
             boolean isProd = !request.getEmail().endsWith("@localhost"); // simple toggle for dev vs prod
@@ -78,7 +82,7 @@ public class AuthController {
                     .path("/")
                     .maxAge(Duration.ofDays(1))
                     .sameSite(isProd ? "None" : "Lax") // Lax for local dev, None for prod
-                    .secure(isProd)                    // false in dev, true in prod
+                    .secure(isProd)                        // false in dev, true in prod
                     .build();
 
             return ResponseEntity.ok()
@@ -122,63 +126,48 @@ public class AuthController {
     
     @GetMapping("/is-authenticated")
     public ResponseEntity<Boolean> isAuthenticated(@CurrentSecurityContext(expression = "authentication?.name") String email){
-    	    return ResponseEntity.ok(email != null);
+        return ResponseEntity.ok(email != null);
     }
     
     @PostMapping("/send-reset-otp")
     public void sendResetOtp(@RequestParam String email) {
-    	    try {
-    	    	    profileService.sendResetOtp(email);
-    	    }catch(Exception e) {
-    	    	    throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-    	    }
+        try {
+            profileService.sendResetOtp(email);
+        }catch(Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
     
     @PostMapping("/reset-password")
     public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
-    	    try {
-    	    	    profileService.resetPassword(request.getEmail(), request.getOtp(), request.getNewPassword());
-    	    }catch(Exception e) {
-    	    	throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,e.getMessage());
-    	    } 
+        try {
+            profileService.resetPassword(request.getEmail(), request.getOtp(), request.getNewPassword());
+        }catch(Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,e.getMessage());
+        }    
     }
     
     @PostMapping("/send-otp")
     public void sendVerifyOtp(@CurrentSecurityContext(expression = "authentication?.name") String email) {
-    	    try {
-    	    	 profileService.sendOtp(email);
-    	    }catch(Exception e) {
-    	    	throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-    	    }
+        try {
+             profileService.sendOtp(email);
+        }catch(Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
     
     @PostMapping("/verify-otp")
     public void verifyEmail(@RequestBody Map<String, Object> request,
-    		@CurrentSecurityContext(expression = "authentication?.name") String email) {
-    	    
-    	if(request.get("otp") == null) {
-    		throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Missing details");
-    	}
-    	
-    	    try {
-    	    	   profileService.verifyOtp(email, request.get("otp").toString());
-    	     }catch(Exception e) {
-    	    	   throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-    	     }
+            @CurrentSecurityContext(expression = "authentication?.name") String email) {
+            
+        if(request.get("otp") == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Missing details");
+        }
+        
+        try {
+            profileService.verifyOtp(email, request.get("otp").toString());
+           }catch(Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+           }
     }
-    
-//    @PostMapping("/logout")
-//    public ResponseEntity<?> logout(HttpServletResponse response){
-//    	     ResponseCookie cookie = ResponseCookie.from("jwt","")
-//    	    		 .httpOnly(true)
-//    	    		 .secure(false)
-//    	    		 .path("/")
-//    	    		 .maxAge(0)
-//    	    		 .sameSite("None")  
-//    	    		 .secure(true)  
-//    	    		 .build();
-//    	     return ResponseEntity.ok()
-//    	    		 .header(HttpHeaders.SET_COOKIE, cookie.toString())
-//    	    		 .body("Logged out successfully!");
-//    }
 }
