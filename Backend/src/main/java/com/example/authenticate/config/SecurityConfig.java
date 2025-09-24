@@ -73,7 +73,7 @@ public class SecurityConfig {
     // CORS configuration
     private CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("http://localhost:5173")); // React frontend URL
+        config.setAllowedOriginPatterns(List.of("http://localhost:5173", "https://authify-frontend-m3im.onrender.com"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")); // allowed HTTP methods
         config.setAllowedHeaders(List.of("Authorization", "Content-Type")); // headers allowed in request
         config.setAllowCredentials(true); // allow cookies/authorization headers
