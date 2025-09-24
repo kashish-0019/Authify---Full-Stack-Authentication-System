@@ -35,16 +35,16 @@ public class SecurityConfig {
     // Main security filter chain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http.cors(Customizer.withDefaults()) // Use the default CORS config from WebMvcConfigurer
-            .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for REST APIs
+        http.cors(AbstractHttpConfigurer::disable)
+            .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/register", "/send-reset-otp",
-                                 "/reset-password", "/logout", "/is-authenticated")
-                .permitAll() // Public endpoints
-                .anyRequest().authenticated() // Everything else needs JWT
+                .requestMatchers("/api/v1.0/login", "/api/v1.0/register", "/api/v1.0/send-reset-otp",
+                                 "/api/v1.0/reset-password", "/api/v1.0/logout", "/api/v1.0/is-authenticated")
+                .permitAll()
+                .anyRequest().authenticated()
             )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless JWT
-            .logout(AbstractHttpConfigurer::disable) // Disable default logout (handled manually)
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .logout(AbstractHttpConfigurer::disable)
             .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
             .exceptionHandling(ex -> ex.authenticationEntryPoint(customAuthEntryPoint));
 
