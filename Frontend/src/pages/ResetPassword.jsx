@@ -4,6 +4,7 @@ import { useState, useContext } from "react";
 import { AppContext } from "../context/AppContext";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { apiUrl } from "../util/api";
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -12,7 +13,6 @@ const ResetPassword = () => {
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [otp, setOtp] = useState("");
-
   const [isEmailSent, setIsEmailSent] = useState(false);
 
   const { backendUrl } = useContext(AppContext);
@@ -27,8 +27,10 @@ const ResetPassword = () => {
     }
     try {
       setLoading(true);
-      // ✅ backend expects RequestParam → send as query string
-      const res = await axios.post(`${backendUrl}/send-reset-otp?email=${encodeURIComponent(email)}`);
+    
+      const res = await axios.post(
+        apiUrl(backendUrl, `/send-reset-otp?email=${encodeURIComponent(email)}`)
+      );
       if (res.status === 200) {
         setIsEmailSent(true);
         toast.success("OTP sent to your email!");
@@ -50,7 +52,7 @@ const ResetPassword = () => {
     }
     try {
       setLoading(true);
-      const res = await axios.post(`${backendUrl}/reset-password`, {
+      const res = await axios.post(apiUrl(backendUrl, "/reset-password"), {
         email,
         otp,
         newPassword,
