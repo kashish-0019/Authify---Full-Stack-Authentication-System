@@ -4,7 +4,13 @@ import { useContext, useState, useRef, useEffect } from "react";
 import { AppContext } from "../context/AppContext";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { apiUrl } from "../util/api";
+
+// Utility to safely combine base URL and path
+const apiUrl = (base, path) => {
+    if (!base.endsWith("/")) base += "/";
+    if (path.startsWith("/")) path = path.slice(1);
+    return base + path;
+};
 
 const EmailVerify = () => {
     const inputRef = useRef([]);
@@ -12,14 +18,14 @@ const EmailVerify = () => {
     const { getUserData, backendUrl, isLoggedIn, userData } = useContext(AppContext);
     const navigate = useNavigate();
 
-    // Auto focus
+    // Auto focus when entering OTP
     const handleChange = (e, i) => {
         const value = e.target.value;
         if (value && i < 5) inputRef.current[i + 1].focus();
         if (!value && i > 0) inputRef.current[i - 1].focus();
     };
 
-    // Paste handler
+    // Paste handler for OTP
     const handlePaste = (e) => {
         e.preventDefault();
         const paste = e.clipboardData.getData("text").slice(0, 6).split("");
@@ -30,10 +36,10 @@ const EmailVerify = () => {
         inputRef.current[next].focus();
     };
 
-    // Collect OTP
+    // Collect OTP from inputs
     const getOtp = () => inputRef.current.map((input) => input.value).join("");
 
-    // Verify OTP
+    // Verify OTP API call
     const handleVerify = async () => {
         const otp = getOtp();
         if (otp.length !== 6) {
@@ -58,6 +64,7 @@ const EmailVerify = () => {
         }
     };
 
+    // Redirect if already logged in and verified
     useEffect(() => {
         if (isLoggedIn && userData?.isAccountVerified) navigate("/");
     }, [isLoggedIn, userData, navigate]);
@@ -96,7 +103,7 @@ const EmailVerify = () => {
                         ))}
                     </div>
 
-                    {/* Button */}
+                    {/* Verify Button */}
                     <button
                         className="btn btn-primary w-100 fw-semibold"
                         disabled={loading}
