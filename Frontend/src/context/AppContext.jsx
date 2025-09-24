@@ -3,56 +3,54 @@ import { AppConstants } from "../util/constants";
 import { toast } from "react-toastify";
 import axios from "axios";
 
+// Helper to safely build API URLs
+const apiUrl = (endpoint) => {
+  return `${AppConstants.BACKEND_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
+};
+
 export const AppContext = createContext();
 
 export const AppContextProvider = (props) => {
 
-    axios.defaults.withCredentials = true;
+    axios.defaults.withCredentials = true; // send cookies with requests
 
-    const backendUrl = AppConstants.BACKEND_URL;
     const [isLoggedin, setIsLoggedIn] = useState(false);
     const [userData, setUserData] = useState(null);
 
-    const getUserData = async()=>{
-        try{
-            const response =  await axios.get(backendUrl+"/profile");
-
-            if(response.status === 200){
+    const getUserData = async () => {
+        try {
+            const response = await axios.get(apiUrl("/profile"));
+            if (response.status === 200) {
                 setUserData(response.data);
-            }else{
-                toast.error("unable to retrieve the profile");
+            } else {
+                toast.error("Unable to retrieve the profile");
             }
-        }catch(error){
-            toast.error(error.message);
+        } catch (error) {
+            toast.error(error.response?.data?.message || error.message);
         }
-    }
+    };
 
-    const getAuthState = async ()=>{
-        try{
-            const response = await axios.get(backendUrl+"/is-authenticated");
-            if(response.status === 200 && response.data === true){
+    const getAuthState = async () => {
+        try {
+            const response = await axios.get(apiUrl("/is-authenticated"));
+            if (response.status === 200 && response.data === true) {
                 setIsLoggedIn(true);
                 await getUserData();
-            }else{
+            } else {
                 setIsLoggedIn(false);
             }
-        }catch(error){
-            if(error.response){
-                const msg = error.response.data?.message || "Authentication check failed";
-                toast.error(msg);
-            }else{
-                toast.error(error.message);
-            }
+        } catch (error) {
+            toast.error(error.response?.data?.message || error.message || "Authentication check failed");
             setIsLoggedIn(false);
         }
-    }
+    };
 
-    useEffect(()=>{
+    useEffect(() => {
         getAuthState();
-    },[]);
+    }, []);
 
     const contextValue = {
-        backendUrl,
+        backendUrl: AppConstants.BACKEND_URL,
         isLoggedin, setIsLoggedIn,
         userData, setUserData, getUserData
     };
