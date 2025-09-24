@@ -28,7 +28,11 @@ const ResetPassword = () => {
             }
         } catch (err) {
             // Check for a specific error from the backend response
-            toast.error(err.response?.data?.message || "Failed to send OTP. Try again.");
+            if (err.response) {
+                toast.error(err.response.data?.message || "Failed to send OTP. Try again.");
+            } else {
+                toast.error("Network error. Please try again.");
+            }
         } finally { setLoading(false); }
     };
 
@@ -44,7 +48,11 @@ const ResetPassword = () => {
             }
         } catch (err) {
             // Check for a specific error from the backend response
-            toast.error(err.response?.data?.message || "Invalid OTP or failed to reset password.");
+            if (err.response) {
+                toast.error(err.response.data?.message || "Invalid OTP or failed to reset password.");
+            } else {
+                toast.error("Network error. Please try again.");
+            }
         } finally { setLoading(false); }
     };
 
